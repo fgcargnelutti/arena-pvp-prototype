@@ -1,48 +1,118 @@
-import { useEffect, useRef } from "react";
-import { Application, Graphics } from "pixi.js";
+import { useState } from "react";
+import BossBattleLobbyScreen from "./app/screens/BossBattleLobbyScreen";
+import GameScreen from "./app/screens/GameScreen";
+import HeroesScreen from "./app/screens/HeroesScreen";
+import ItemsScreen from "./app/screens/ItemsScreen";
+import MainHubScreen from "./app/screens/MainHubScreen";
+import MatchModeSelectScreen from "./app/screens/MatchModeSelectScreen";
+import NpcTraderScreen from "./app/screens/NpcTraderScreen";
+import PvpLobbyScreen from "./app/screens/PvpLobbyScreen";
+import ResultsScreen from "./app/screens/ResultsScreen";
+import SplashScreen from "./app/screens/SplashScreen";
+
+type AppScreen =
+  | "splash"
+  | "main-hub"
+  | "heroes"
+  | "items"
+  | "npc-trader"
+  | "match-mode-select"
+  | "pvp-lobby"
+  | "boss-battle-lobby"
+  | "game"
+  | "results";
+
+type MatchContext = {
+  modeLabel: string;
+  arenaLabel: string;
+};
+
+const defaultMatchContext: MatchContext = {
+  modeLabel: "PvP Skirmish",
+  arenaLabel: "Mid Duel Arena",
+};
 
 function App() {
-  const containerRef = useRef<HTMLDivElement>(null);
+  const [screen, setScreen] = useState<AppScreen>("splash");
+  const [matchContext, setMatchContext] = useState<MatchContext>(defaultMatchContext);
 
-  useEffect(() => {
-    const container = containerRef.current;
-    if (!container) return;
+  if (screen === "splash") {
+    return <SplashScreen onContinue={() => setScreen("main-hub")} />;
+  }
 
-    const app = new Application();
+  if (screen === "main-hub") {
+    return (
+      <MainHubScreen
+        onHeroes={() => setScreen("heroes")}
+        onItems={() => setScreen("items")}
+        onNpcTrader={() => setScreen("npc-trader")}
+        onFindMatch={() => setScreen("match-mode-select")}
+      />
+    );
+  }
 
-    const start = async () => {
-      await app.init({
-        width: 800,
-        height: 600,
-        background: "#1e1e1e",
-      });
+  if (screen === "heroes") {
+    return <HeroesScreen onBack={() => setScreen("main-hub")} />;
+  }
 
-      container.appendChild(app.canvas);
+  if (screen === "items") {
+    return <ItemsScreen onBack={() => setScreen("main-hub")} />;
+  }
 
-      const square = new Graphics();
+  if (screen === "npc-trader") {
+    return <NpcTraderScreen onBack={() => setScreen("main-hub")} />;
+  }
 
-      square
-        .rect(100, 100, 120, 120)
-        .fill({ color: 0xff0000 });
+  if (screen === "match-mode-select") {
+    return (
+      <MatchModeSelectScreen
+        onBack={() => setScreen("main-hub")}
+        onPvp={() => setScreen("pvp-lobby")}
+        onBossBattle={() => setScreen("boss-battle-lobby")}
+      />
+    );
+  }
 
-      app.stage.addChild(square);
-    };
+  if (screen === "pvp-lobby") {
+    return (
+      <PvpLobbyScreen
+        onBack={() => setScreen("match-mode-select")}
+        onStart={(selectedArena) => {
+          setMatchContext({ modeLabel: "PvP Skirmish", arenaLabel: selectedArena });
+          setScreen("game");
+        }}
+      />
+    );
+  }
 
-    start();
+  if (screen === "boss-battle-lobby") {
+    return (
+      <BossBattleLobbyScreen
+        onBack={() => setScreen("match-mode-select")}
+        onStart={() => {
+          setMatchContext({ modeLabel: "Boss Battle", arenaLabel: "Ancient Lion Lair" });
+          setScreen("game");
+        }}
+      />
+    );
+  }
 
-    return () => {
-  app.destroy();
-};
-  }, []);
+  if (screen === "game") {
+    return (
+      <GameScreen
+        modeLabel={matchContext.modeLabel}
+        arenaLabel={matchContext.arenaLabel}
+        onFinish={() => setScreen("results")}
+      />
+    );
+  }
 
   return (
-    <div
-      ref={containerRef}
-      style={{
-        width: "800px",
-        height: "600px",
-        border: "4px solid blue",
-      }}
+    <ResultsScreen
+      modeLabel={matchContext.modeLabel}
+      arenaLabel={matchContext.arenaLabel}
+      onFindAnother={() => setScreen("match-mode-select")}
+      onMainHub={() => setScreen("main-hub")}
     />
   );
 }

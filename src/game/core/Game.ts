@@ -1,50 +1,40 @@
-import { Application, Container, Graphics } from "pixi.js";
-
-type Vector2 = {
-  x: number;
-  y: number;
-};
-
-type PlayerState = {
-  position: Vector2;
-  velocity: Vector2;
-  radius: number;
-  speed: number;
-};
-
-type CameraState = {
-  position: Vector2;
-  deadZoneRadius: number;
-  followLerp: number;
-};
-
-type ArenaState = {
-  width: number;
-  height: number;
-};
-
-type GameState = {
-  arena: ArenaState;
-  camera: CameraState;
-  player: PlayerState;
-};
-
-const keys = {
-  up: ["KeyW", "ArrowUp"],
-  down: ["KeyS", "ArrowDown"],
-  left: ["KeyA", "ArrowLeft"],
-  right: ["KeyD", "ArrowRight"],
-};
+import { Application, Container, Graphics, Text } from "pixi.js";
+import { Camera } from "./Camera";
+import { Input } from "./Input";
+import { BasicAttack } from "../combat/BasicAttack";
+import { Health, type HealthState } from "../combat/Health";
+import { DummyEnemy } from "../entities/DummyEnemy";
+import { MovementSystem } from "../systems/MovementSystem";
+import type { ArenaState, GameState } from "../types/game.types";
+import { clamp } from "../utils/math";
 
 export class Game {
   private readonly app = new Application();
   private readonly container: HTMLElement;
-  private readonly pressedKeys = new Set<string>();
   private readonly world = new Container();
   private readonly arenaView = new Graphics();
+  private readonly enemyView = new Graphics();
   private readonly playerView = new Graphics();
+  private readonly hudView = new Graphics();
+  private readonly winMessage = new Text({
+    text: "You win! Press R to restart",
+    style: {
+      fill: "#eff3f7",
+      fontFamily: "Arial",
+      fontSize: 32,
+      fontWeight: "700",
+      stroke: { color: "#12161c", width: 4 },
+    },
+  });
+  private readonly dummyEnemy = new DummyEnemy({ x: 1200, y: 600 }, 28, 100);
+  private readonly playerHealth = new Health(100);
+  private readonly input = new Input();
+  private readonly basicAttack = new BasicAttack(90, 20, 0.6);
+  private readonly cameraSystem = new Camera();
+  private readonly movementSystem = new MovementSystem();
 
   private isRunning = false;
+  private enemyHitFlashSeconds = 0;
 
   private readonly state: GameState = {
     arena: {
@@ -76,12 +66,14 @@ export class Game {
     });
 
     this.container.appendChild(this.app.canvas);
-    this.app.stage.addChild(this.world);
-    this.world.addChild(this.arenaView, this.playerView);
+    this.app.stage.addChild(this.world, this.hudView, this.winMessage);
+    this.world.addChild(this.arenaView, this.enemyView, this.playerView);
 
     this.drawStaticViews();
+    this.winMessage.anchor.set(0.5);
+    this.winMessage.visible = false;
     this.render();
-    this.bindInput();
+    this.input.bind();
 
     this.app.ticker.add(this.tick);
     this.isRunning = true;
@@ -90,7 +82,7 @@ export class Game {
   public destroy(): void {
     this.isRunning = false;
     this.app.ticker.remove(this.tick);
-    this.unbindInput();
+    this.input.unbind();
     this.app.destroy(true, { children: true });
   }
 
@@ -106,41 +98,49 @@ export class Game {
   };
 
   private update(deltaSeconds: number): void {
-    this.updatePlayerMovement(deltaSeconds);
-    this.updateCamera();
+    this.movementSystem.update(
+      this.state.player,
+      this.input.getMovementInput(),
+      deltaSeconds,
+      this.state.arena,
+    );
+    this.cameraSystem.update(this.state.camera, this.state.player.position);
+    this.updateCombatFeedback(deltaSeconds);
+    this.updateBasicAttack(deltaSeconds);
+    this.updateRestart();
   }
 
-  private updatePlayerMovement(deltaSeconds: number): void {
-    const input = this.getMovementInput();
-    const player = this.state.player;
-
-    player.velocity.x = input.x * player.speed;
-    player.velocity.y = input.y * player.speed;
-    player.position.x += player.velocity.x * deltaSeconds;
-    player.position.y += player.velocity.y * deltaSeconds;
-
-    player.position.x = clamp(
-      player.position.x,
-      player.radius,
-      this.state.arena.width - player.radius,
-    );
-    player.position.y = clamp(
-      player.position.y,
-      player.radius,
-      this.state.arena.height - player.radius,
-    );
+  private updateCombatFeedback(deltaSeconds: number): void {
+    this.enemyHitFlashSeconds = Math.max(this.enemyHitFlashSeconds - deltaSeconds, 0);
   }
 
-  private updateCamera(): void {
-    const { camera, player } = this.state;
-    const distanceFromAnchor = distance(camera.position, player.position);
+  private updateBasicAttack(deltaSeconds: number): void {
+    this.basicAttack.update(deltaSeconds);
 
-    if (distanceFromAnchor <= camera.deadZoneRadius) {
+    if (!this.input.isAttackPressed() || !this.dummyEnemy.isAlive()) {
       return;
     }
 
-    camera.position.x = lerp(camera.position.x, player.position.x, camera.followLerp);
-    camera.position.y = lerp(camera.position.y, player.position.y, camera.followLerp);
+    const didHit = this.basicAttack.tryAttack(this.state.player.position, this.dummyEnemy);
+
+    if (didHit) {
+      console.log("hit");
+      this.enemyHitFlashSeconds = 0.12;
+    }
+  }
+
+  private updateRestart(): void {
+    if (this.dummyEnemy.isAlive() || !this.input.isRestartPressed()) {
+      return;
+    }
+
+    this.state.player.position.x = 900;
+    this.state.player.position.y = 600;
+    this.state.player.velocity.x = 0;
+    this.state.player.velocity.y = 0;
+    this.dummyEnemy.position.x = 1200;
+    this.dummyEnemy.position.y = 600;
+    this.dummyEnemy.health.heal(this.dummyEnemy.health.state.maxHealth);
   }
 
   private render(): void {
@@ -152,7 +152,11 @@ export class Game {
     const cameraY = clamp(camera.position.y, viewportHeight / 2, arena.height - viewportHeight / 2);
 
     this.world.position.set(viewportWidth / 2 - cameraX, viewportHeight / 2 - cameraY);
+    this.enemyView.position.set(this.dummyEnemy.position.x, this.dummyEnemy.position.y);
     this.playerView.position.set(player.position.x, player.position.y);
+    this.renderEnemy();
+    this.renderHealthBars();
+    this.renderWinMessage(viewportWidth, viewportHeight);
   }
 
   private drawStaticViews(): void {
@@ -164,6 +168,8 @@ export class Game {
       .stroke({ color: "#7f8ea3", width: 4 });
 
     this.drawArenaGrid(arena);
+
+    this.renderEnemy();
 
     this.playerView.circle(0, 0, player.radius).fill("#41d18c");
     this.playerView.circle(8, -8, 5).fill("#effff6");
@@ -187,58 +193,45 @@ export class Game {
     }
   }
 
-  private getMovementInput(): Vector2 {
-    const input = {
-      x: axis(this.pressedKeys, keys.right) - axis(this.pressedKeys, keys.left),
-      y: axis(this.pressedKeys, keys.down) - axis(this.pressedKeys, keys.up),
-    };
-    const magnitude = Math.hypot(input.x, input.y);
-
-    if (magnitude === 0) {
-      return input;
-    }
-
-    return {
-      x: input.x / magnitude,
-      y: input.y / magnitude,
-    };
+  private renderHealthBars(): void {
+    this.hudView.clear();
+    this.drawHealthBar(24, 24, this.playerHealth.state, "#41d18c");
+    this.drawHealthBar(24, 52, this.dummyEnemy.health.state, "#d95555");
+    this.drawCooldownBar(24, 80);
   }
 
-  private bindInput(): void {
-    window.addEventListener("keydown", this.handleKeyDown);
-    window.addEventListener("keyup", this.handleKeyUp);
+  private drawHealthBar(x: number, y: number, health: HealthState, fillColor: string): void {
+    const width = 180;
+    const height = 12;
+    const healthRatio = health.currentHealth / health.maxHealth;
+
+    this.hudView.rect(x, y, width, height).fill("#12161c");
+    this.hudView.rect(x, y, width * healthRatio, height).fill(fillColor);
+    this.hudView.rect(x, y, width, height).stroke({ color: "#eff3f7", width: 1 });
   }
 
-  private unbindInput(): void {
-    window.removeEventListener("keydown", this.handleKeyDown);
-    window.removeEventListener("keyup", this.handleKeyUp);
+  private drawCooldownBar(x: number, y: number): void {
+    const width = 180;
+    const height = 8;
+    const cooldownRatio = this.basicAttack.getCooldownRatio();
+    const readyRatio = 1 - cooldownRatio;
+
+    this.hudView.rect(x, y, width, height).fill("#12161c");
+    this.hudView.rect(x, y, width * readyRatio, height).fill("#f2c14e");
+    this.hudView.rect(x, y, width, height).stroke({ color: "#eff3f7", width: 1 });
   }
 
-  private readonly handleKeyDown = (event: KeyboardEvent): void => {
-    this.pressedKeys.add(event.code);
-  };
+  private renderEnemy(): void {
+    const enemyColor = this.enemyHitFlashSeconds > 0 ? "#fff0f0" : "#d95555";
 
-  private readonly handleKeyUp = (event: KeyboardEvent): void => {
-    this.pressedKeys.delete(event.code);
-  };
+    this.enemyView.clear();
+    this.enemyView.circle(0, 0, this.dummyEnemy.radius).fill(enemyColor);
+    this.enemyView.circle(-8, -8, 5).fill("#fff0f0");
+  }
+
+  private renderWinMessage(viewportWidth: number, viewportHeight: number): void {
+    this.winMessage.visible = !this.dummyEnemy.isAlive();
+    this.winMessage.position.set(viewportWidth / 2, viewportHeight / 2);
+  }
+
 }
-
-const axis = (pressedKeys: Set<string>, codes: string[]): number => {
-  return codes.some((code) => pressedKeys.has(code)) ? 1 : 0;
-};
-
-const clamp = (value: number, min: number, max: number): number => {
-  if (min > max) {
-    return value;
-  }
-
-  return Math.min(Math.max(value, min), max);
-};
-
-const distance = (a: Vector2, b: Vector2): number => {
-  return Math.hypot(a.x - b.x, a.y - b.y);
-};
-
-const lerp = (from: number, to: number, amount: number): number => {
-  return from + (to - from) * amount;
-};

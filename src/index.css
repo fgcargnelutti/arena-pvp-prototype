@@ -9,4 +9,212 @@ body,
 body {
   overflow: hidden;
   background: #111;
+  color: #eff3f7;
+  font-family:
+    Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+button {
+  cursor: pointer;
+  border: 1px solid #7f8ea3;
+  background: #eff3f7;
+  color: #12161c;
+  font: inherit;
+  font-weight: 700;
+  padding: 10px 14px;
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.screen,
+.game-screen {
+  width: 100%;
+  height: 100%;
+}
+
+.screen {
+  display: grid;
+  place-items: center;
+  background: #15191f;
+}
+
+.screen-panel {
+  width: min(420px, calc(100% - 40px));
+  border: 1px solid #343c47;
+  background: #20262e;
+  padding: 24px;
+}
+
+.screen-panel-wide {
+  width: min(760px, calc(100% - 40px));
+}
+
+.screen-panel h1 {
+  margin: 0 0 16px;
+  font-size: 28px;
+}
+
+.screen-panel p {
+  margin: 0 0 16px;
+  color: #b8c2cf;
+}
+
+.screen-kicker {
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.placeholder-list {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.placeholder-list span {
+  border: 1px solid #343c47;
+  background: #15191f;
+  padding: 10px;
+}
+
+.screen-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.screen-hint {
+  margin-top: 16px;
+  font-size: 13px;
+}
+
+.hub-screen {
+  position: relative;
+  display: grid;
+  grid-template-rows: auto 1fr;
+  width: 100%;
+  height: 100%;
+  background: #15191f;
+}
+
+.hub-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  border-bottom: 1px solid #343c47;
+  padding: 16px 24px;
+  background: #20262e;
+}
+
+.hub-toolbar nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.hub-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.5fr) minmax(280px, 0.8fr);
+  gap: 20px;
+  padding: 24px;
+}
+
+.hub-panel {
+  border: 1px solid #343c47;
+  background: #20262e;
+  padding: 20px;
+}
+
+.hub-news {
+  min-height: 320px;
+}
+
+.hub-panel h1,
+.hub-panel h2 {
+  margin: 0 0 12px;
+}
+
+.find-match-button {
+  position: absolute;
+  right: 24px;
+  bottom: 24px;
+  padding: 14px 22px;
+}
+
+.mode-grid,
+.arena-options,
+.lobby-grid {
+  display: grid;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.mode-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.mode-grid button {
+  display: grid;
+  gap: 6px;
+  min-height: 120px;
+  text-align: left;
+}
+
+.mode-grid span {
+  font-weight: 400;
+}
+
+.arena-options {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.arena-options .selected {
+  border-color: #f2c14e;
+  background: #f2c14e;
+}
+
+.lobby-grid span {
+  border: 1px solid #343c47;
+  background: #15191f;
+  padding: 10px;
+}
+
+.game-screen {
+  position: relative;
+}
+
+.game-screen-finish {
+  position: absolute;
+  top: 24px;
+  right: 24px;
+  z-index: 1;
+}
+
+.game-screen-banner {
+  position: absolute;
+  left: 24px;
+  bottom: 24px;
+  z-index: 1;
+  display: grid;
+  gap: 4px;
+  border: 1px solid #343c47;
+  background: rgba(18, 22, 28, 0.86);
+  padding: 10px 12px;
+}
+
+@media (max-width: 760px) {
+  .hub-toolbar,
+  .hub-grid {
+    display: grid;
+  }
+
+  .hub-grid,
+  .mode-grid,
+  .arena-options {
+    grid-template-columns: 1fr;
+  }
 }

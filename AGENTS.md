@@ -190,3 +190,19 @@ This is a gameplay prototype.
 Do not focus on UI or backend.
 
 Focus on movement, camera, and core feel of the game.
+
+## Task Tracking Rule
+
+The project uses `TASKS.md` as the source of truth for roadmap progress.
+
+After completing any implementation task, you MUST:
+
+1. Check `TASKS.md`
+2. Identify whether the completed work matches an existing task or subtask
+3. Mark completed items with `[x]`
+4. Do not mark unrelated items as complete
+5. If the completed work is not listed, add it under the most relevant section
+6. Keep task descriptions concise
+7. Never delete unfinished tasks unless explicitly instructed
+
+Every code change task must include a `TASKS.md` update when applicable.
