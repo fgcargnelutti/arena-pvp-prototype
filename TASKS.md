@@ -128,6 +128,20 @@ Goal: Provide minimal player feedback.
 
 ---
 
+## 7.1 Visual Style System
+
+Goal: Give the gameplay prototype a consistent modern pixel-art visual identity.
+
+### Subtasks
+
+- [x] Define a shared gameplay color palette
+- [x] Centralize runtime game colors in `src/game/utils/colors.ts`
+- [x] Apply palette to player, dummy enemy, arena, grid, and HUD bars
+- [x] Refine simple Graphics shapes with soft outlines and subtle shading
+- [x] Document visual decisions in `ART_STYLE_GUIDE.md`
+
+---
+
 # 🧩 LATER (Arena & PvM)
 
 ## 8. Arena Events System

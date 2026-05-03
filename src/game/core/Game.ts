@@ -6,6 +6,7 @@ import { Health, type HealthState } from "../combat/Health";
 import { DummyEnemy } from "../entities/DummyEnemy";
 import { MovementSystem } from "../systems/MovementSystem";
 import type { ArenaState, GameState } from "../types/game.types";
+import { gameColors } from "../utils/colors";
 import { clamp } from "../utils/math";
 
 export class Game {
@@ -19,11 +20,11 @@ export class Game {
   private readonly winMessage = new Text({
     text: "You win! Press R to restart",
     style: {
-      fill: "#eff3f7",
+      fill: gameColors.ui.text,
       fontFamily: "Arial",
       fontSize: 32,
       fontWeight: "700",
-      stroke: { color: "#12161c", width: 4 },
+      stroke: { color: gameColors.ui.panel, width: 4 },
     },
   });
   private readonly dummyEnemy = new DummyEnemy({ x: 1200, y: 600 }, 28, 100);
@@ -60,8 +61,8 @@ export class Game {
 
   public async init(): Promise<void> {
     await this.app.init({
-      antialias: true,
-      background: "#15191f",
+      antialias: false,
+      background: gameColors.arena.background,
       resizeTo: this.container,
     });
 
@@ -156,23 +157,27 @@ export class Game {
     this.playerView.position.set(player.position.x, player.position.y);
     this.renderEnemy();
     this.renderHealthBars();
+    this.renderPlayer();
     this.renderWinMessage(viewportWidth, viewportHeight);
   }
 
   private drawStaticViews(): void {
-    const { arena, player } = this.state;
+    const { arena } = this.state;
 
     this.arenaView
       .rect(0, 0, arena.width, arena.height)
-      .fill("#252b33")
-      .stroke({ color: "#7f8ea3", width: 4 });
+      .fill(gameColors.arena.floor)
+      .stroke({ color: gameColors.arena.border, width: 4 });
+
+    this.arenaView
+      .rect(8, 8, arena.width - 16, arena.height - 16)
+      .stroke({ color: gameColors.arena.borderHighlight, width: 1, alpha: 0.45 });
 
     this.drawArenaGrid(arena);
+    this.drawArenaDepth(arena);
 
     this.renderEnemy();
-
-    this.playerView.circle(0, 0, player.radius).fill("#41d18c");
-    this.playerView.circle(8, -8, 5).fill("#effff6");
+    this.renderPlayer();
   }
 
   private drawArenaGrid(arena: ArenaState): void {
@@ -180,23 +185,43 @@ export class Game {
 
     for (let x = gridSize; x < arena.width; x += gridSize) {
       this.arenaView.moveTo(x, 0).lineTo(x, arena.height).stroke({
-        color: "#343c47",
-        width: 1,
+        color: x % 300 === 0 ? gameColors.arena.gridStrong : gameColors.arena.grid,
+        width: x % 300 === 0 ? 2 : 1,
+        alpha: x % 300 === 0 ? 0.45 : 0.28,
       });
     }
 
     for (let y = gridSize; y < arena.height; y += gridSize) {
       this.arenaView.moveTo(0, y).lineTo(arena.width, y).stroke({
-        color: "#343c47",
-        width: 1,
+        color: y % 300 === 0 ? gameColors.arena.gridStrong : gameColors.arena.grid,
+        width: y % 300 === 0 ? 2 : 1,
+        alpha: y % 300 === 0 ? 0.45 : 0.28,
       });
     }
   }
 
+  private drawArenaDepth(arena: ArenaState): void {
+    this.arenaView.rect(0, arena.height - 18, arena.width, 18).fill({
+      color: gameColors.arena.floorShade,
+      alpha: 0.6,
+    });
+    this.arenaView.rect(arena.width - 18, 0, 18, arena.height).fill({
+      color: gameColors.arena.floorShade,
+      alpha: 0.5,
+    });
+    this.arenaView.rect(0, 0, arena.width, 6).fill({
+      color: gameColors.arena.borderHighlight,
+      alpha: 0.22,
+    });
+  }
+
   private renderHealthBars(): void {
     this.hudView.clear();
-    this.drawHealthBar(24, 24, this.playerHealth.state, "#41d18c");
-    this.drawHealthBar(24, 52, this.dummyEnemy.health.state, "#d95555");
+    this.hudView.rect(16, 16, 200, 82).fill(gameColors.ui.panelTransparent);
+    this.hudView.rect(16, 16, 200, 82).stroke({ color: gameColors.ui.border, width: 1 });
+
+    this.drawHealthBar(26, 26, this.playerHealth.state, gameColors.player.primary);
+    this.drawHealthBar(26, 54, this.dummyEnemy.health.state, gameColors.enemy.primary);
     this.drawCooldownBar(24, 80);
   }
 
@@ -205,9 +230,11 @@ export class Game {
     const height = 12;
     const healthRatio = health.currentHealth / health.maxHealth;
 
-    this.hudView.rect(x, y, width, height).fill("#12161c");
+    this.hudView.rect(x, y, width, height).fill(gameColors.ui.barShade);
+    this.hudView.rect(x + 2, y + 2, width - 4, height - 4).fill(gameColors.ui.emptyBar);
     this.hudView.rect(x, y, width * healthRatio, height).fill(fillColor);
-    this.hudView.rect(x, y, width, height).stroke({ color: "#eff3f7", width: 1 });
+    this.hudView.rect(x, y, width * healthRatio, 2).fill({ color: gameColors.ui.text, alpha: 0.22 });
+    this.hudView.rect(x, y, width, height).stroke({ color: gameColors.ui.borderLight, width: 1 });
   }
 
   private drawCooldownBar(x: number, y: number): void {
@@ -216,17 +243,45 @@ export class Game {
     const cooldownRatio = this.basicAttack.getCooldownRatio();
     const readyRatio = 1 - cooldownRatio;
 
-    this.hudView.rect(x, y, width, height).fill("#12161c");
-    this.hudView.rect(x, y, width * readyRatio, height).fill("#f2c14e");
-    this.hudView.rect(x, y, width, height).stroke({ color: "#eff3f7", width: 1 });
+    this.hudView.rect(x, y, width, height).fill(gameColors.ui.barShade);
+    this.hudView.rect(x + 2, y + 2, width - 4, height - 4).fill(gameColors.ui.emptyBar);
+    this.hudView.rect(x, y, width * readyRatio, height).fill(gameColors.accent.primary);
+    this.hudView.rect(x, y, width * readyRatio, 2).fill({
+      color: gameColors.accent.light,
+      alpha: 0.45,
+    });
+    this.hudView.rect(x, y, width, height).stroke({ color: gameColors.ui.borderLight, width: 1 });
+  }
+
+  private renderPlayer(): void {
+    const { player } = this.state;
+
+    this.playerView.clear();
+    this.playerView.ellipse(2, 9, player.radius * 0.82, player.radius * 0.34).fill({
+      color: gameColors.player.shadow,
+      alpha: 0.34,
+    });
+    this.playerView.circle(0, 0, player.radius + 3).fill(gameColors.player.outline);
+    this.playerView.circle(0, 0, player.radius).fill(gameColors.player.primary);
+    this.playerView.rect(-16, 4, 32, 12).fill({ color: gameColors.player.shade, alpha: 0.55 });
+    this.playerView.circle(-7, -8, 9).fill({ color: gameColors.player.light, alpha: 0.72 });
+    this.playerView.rect(9, -2, 7, 14).fill({ color: gameColors.player.shade, alpha: 0.4 });
   }
 
   private renderEnemy(): void {
-    const enemyColor = this.enemyHitFlashSeconds > 0 ? "#fff0f0" : "#d95555";
+    const enemyColor =
+      this.enemyHitFlashSeconds > 0 ? gameColors.enemy.hit : gameColors.enemy.primary;
 
     this.enemyView.clear();
+    this.enemyView.ellipse(2, 10, this.dummyEnemy.radius * 0.86, this.dummyEnemy.radius * 0.32).fill({
+      color: gameColors.enemy.shadow,
+      alpha: 0.34,
+    });
+    this.enemyView.circle(0, 0, this.dummyEnemy.radius + 3).fill(gameColors.enemy.outline);
     this.enemyView.circle(0, 0, this.dummyEnemy.radius).fill(enemyColor);
-    this.enemyView.circle(-8, -8, 5).fill("#fff0f0");
+    this.enemyView.rect(-18, 4, 36, 13).fill({ color: gameColors.enemy.shade, alpha: 0.56 });
+    this.enemyView.circle(-9, -9, 9).fill({ color: gameColors.enemy.light, alpha: 0.68 });
+    this.enemyView.rect(9, -3, 8, 16).fill({ color: gameColors.enemy.shade, alpha: 0.42 });
   }
 
   private renderWinMessage(viewportWidth: number, viewportHeight: number): void {
