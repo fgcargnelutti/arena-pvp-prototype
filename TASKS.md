@@ -22,7 +22,7 @@ Goal: Ensure the current working prototype is modular and scalable.
   - [x] extract camera logic into `core/Camera.ts`
   - [x] extract movement logic into `systems/MovementSystem.ts`
 
-- [ ] Ensure Game.ts only orchestrates systems
+- [x] Ensure Game.ts only orchestrates systems
 - [x] Keep behavior identical after refactor
 
 ---
