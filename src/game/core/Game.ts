@@ -27,13 +27,13 @@ export class Game {
     camera: {
       position: { x: 900, y: 600 },
       deadZoneRadius: 96,
-      followLerp: 0.12,
+      followLerp: 0.1,
     },
     player: {
       position: { x: 900, y: 600 },
       velocity: { x: 0, y: 0 },
       radius: 24,
-      speed: 360,
+      speed: 320,
     },
   };
 
@@ -72,7 +72,7 @@ export class Game {
       deltaSeconds,
       this.state.arena,
     );
-    this.cameraSystem.update(this.state.camera, this.state.player.position);
+    this.cameraSystem.update(this.state.camera, this.state.player.position, deltaSeconds);
     this.updateCombatFeedback(deltaSeconds);
     this.updateBasicAttack(deltaSeconds);
     this.updateRestart();

@@ -10,10 +10,26 @@ export class MovementSystem {
   ): void {
     player.velocity.x = input.x * player.speed;
     player.velocity.y = input.y * player.speed;
-    player.position.x += player.velocity.x * deltaSeconds;
-    player.position.y += player.velocity.y * deltaSeconds;
 
-    player.position.x = clamp(player.position.x, player.radius, arenaBounds.width - player.radius);
-    player.position.y = clamp(player.position.y, player.radius, arenaBounds.height - player.radius);
+    const nextPosition = {
+      x: player.position.x + player.velocity.x * deltaSeconds,
+      y: player.position.y + player.velocity.y * deltaSeconds,
+    };
+
+    const clampedPosition = {
+      x: clamp(nextPosition.x, player.radius, arenaBounds.width - player.radius),
+      y: clamp(nextPosition.y, player.radius, arenaBounds.height - player.radius),
+    };
+
+    player.position.x = clampedPosition.x;
+    player.position.y = clampedPosition.y;
+
+    if (clampedPosition.x !== nextPosition.x) {
+      player.velocity.x = 0;
+    }
+
+    if (clampedPosition.y !== nextPosition.y) {
+      player.velocity.y = 0;
+    }
   }
 }

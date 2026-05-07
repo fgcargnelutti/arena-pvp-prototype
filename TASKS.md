@@ -46,9 +46,9 @@ Goal: Make movement feel responsive and predictable.
 ### Subtasks
 
 - [x] Normalize diagonal movement (already done, verify)
-- [ ] Adjust player speed tuning
+- [x] Adjust player speed tuning
 - [x] Validate arena boundary constraints
-- [ ] Test edge collision behavior
+- [x] Test edge collision behavior
 
 ---
 
@@ -59,7 +59,7 @@ Goal: Ensure camera behavior matches design intention.
 ### Subtasks
 
 - [x] Validate dead zone behavior
-- [ ] Adjust follow lerp for smoothness
+- [x] Adjust follow lerp for smoothness
 - [x] Ensure player never leaves screen
 - [x] Test camera limits near arena edges
 
