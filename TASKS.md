@@ -106,7 +106,7 @@ Goal: Add one active ability.
 
 ### Subtasks
 
-- [ ] Create Ability type
+- [x] Create Ability type
 - [ ] Implement cooldown system
 - [ ] Add one simple ability (e.g. dash or ranged attack)
 - [ ] Bind ability to input
