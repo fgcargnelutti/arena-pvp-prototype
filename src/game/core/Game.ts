@@ -1,8 +1,9 @@
+import { DashAbility } from "../combat/Ability";
 import { BasicAttack } from "../combat/BasicAttack";
 import { Health } from "../combat/Health";
 import { DummyEnemy } from "../entities/DummyEnemy";
 import { MovementSystem } from "../systems/MovementSystem";
-import type { GameState } from "../types/game.types";
+import type { GameState, Vector2 } from "../types/game.types";
 import { Camera } from "./Camera";
 import { GameRenderer } from "./GameRenderer";
 import { Input } from "./Input";
@@ -13,11 +14,14 @@ export class Game {
   private readonly playerHealth = new Health(100);
   private readonly input = new Input();
   private readonly basicAttack = new BasicAttack(90, 20, 0.6);
+  private readonly dashAbility = new DashAbility(180, 1.8);
   private readonly cameraSystem = new Camera();
   private readonly movementSystem = new MovementSystem();
 
   private isRunning = false;
   private enemyHitFlashSeconds = 0;
+  private playerDashFlashSeconds = 0;
+  private lastMoveDirection: Vector2 = { x: 1, y: 0 };
 
   private readonly state: GameState = {
     arena: {
@@ -66,12 +70,19 @@ export class Game {
   };
 
   private update(deltaSeconds: number): void {
+    const movementInput = this.input.getMovementInput();
+
+    if (movementInput.x !== 0 || movementInput.y !== 0) {
+      this.lastMoveDirection = movementInput;
+    }
+
     this.movementSystem.update(
       this.state.player,
-      this.input.getMovementInput(),
+      movementInput,
       deltaSeconds,
       this.state.arena,
     );
+    this.updateDashAbility(deltaSeconds);
     this.cameraSystem.update(this.state.camera, this.state.player.position, deltaSeconds);
     this.updateCombatFeedback(deltaSeconds);
     this.updateBasicAttack(deltaSeconds);
@@ -80,6 +91,25 @@ export class Game {
 
   private updateCombatFeedback(deltaSeconds: number): void {
     this.enemyHitFlashSeconds = Math.max(this.enemyHitFlashSeconds - deltaSeconds, 0);
+    this.playerDashFlashSeconds = Math.max(this.playerDashFlashSeconds - deltaSeconds, 0);
+  }
+
+  private updateDashAbility(deltaSeconds: number): void {
+    this.dashAbility.update(deltaSeconds);
+
+    if (!this.input.consumeAbilityPressed()) {
+      return;
+    }
+
+    const didDash = this.dashAbility.tryDash(
+      this.state.player,
+      this.lastMoveDirection,
+      this.state.arena,
+    );
+
+    if (didDash) {
+      this.playerDashFlashSeconds = 0.18;
+    }
   }
 
   private updateBasicAttack(deltaSeconds: number): void {
@@ -118,7 +148,9 @@ export class Game {
       enemyHealth: this.dummyEnemy.health.state,
       playerHealth: this.playerHealth.state,
       attackCooldownRatio: this.basicAttack.getCooldownRatio(),
+      dashCooldownRatio: this.dashAbility.getCooldownRatio(),
       enemyHitFlashSeconds: this.enemyHitFlashSeconds,
+      playerDashFlashSeconds: this.playerDashFlashSeconds,
       isWin: !this.dummyEnemy.isAlive(),
     });
   }

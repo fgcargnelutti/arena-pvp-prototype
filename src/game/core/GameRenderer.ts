@@ -15,7 +15,9 @@ type GameRenderSnapshot = {
   enemyHealth: HealthState;
   playerHealth: HealthState;
   attackCooldownRatio: number;
+  dashCooldownRatio: number;
   enemyHitFlashSeconds: number;
+  playerDashFlashSeconds: number;
   isWin: boolean;
 };
 
@@ -90,8 +92,9 @@ export class GameRenderer {
       snapshot.playerHealth,
       snapshot.enemyHealth,
       snapshot.attackCooldownRatio,
+      snapshot.dashCooldownRatio,
     );
-    this.renderPlayer(player.position, player.radius);
+    this.renderPlayer(player.position, player.radius, snapshot.playerDashFlashSeconds);
     this.renderWinMessage(viewportWidth, viewportHeight, snapshot.isWin);
   }
 
@@ -148,14 +151,16 @@ export class GameRenderer {
     playerHealth: HealthState,
     enemyHealth: HealthState,
     attackCooldownRatio: number,
+    dashCooldownRatio: number,
   ): void {
     this.hudView.clear();
-    this.hudView.rect(16, 16, 200, 82).fill(gameColors.ui.panelTransparent);
-    this.hudView.rect(16, 16, 200, 82).stroke({ color: gameColors.ui.border, width: 1 });
+    this.hudView.rect(16, 16, 200, 96).fill(gameColors.ui.panelTransparent);
+    this.hudView.rect(16, 16, 200, 96).stroke({ color: gameColors.ui.border, width: 1 });
 
     this.drawHealthBar(26, 26, playerHealth, gameColors.player.primary);
     this.drawHealthBar(26, 54, enemyHealth, gameColors.enemy.primary);
-    this.drawCooldownBar(24, 80, attackCooldownRatio);
+    this.drawCooldownBar(24, 80, attackCooldownRatio, gameColors.accent.primary);
+    this.drawCooldownBar(24, 96, dashCooldownRatio, gameColors.player.light);
   }
 
   private drawHealthBar(x: number, y: number, health: HealthState, fillColor: string): void {
@@ -170,27 +175,34 @@ export class GameRenderer {
     this.hudView.rect(x, y, width, height).stroke({ color: gameColors.ui.borderLight, width: 1 });
   }
 
-  private drawCooldownBar(x: number, y: number, cooldownRatio: number): void {
+  private drawCooldownBar(x: number, y: number, cooldownRatio: number, fillColor: string): void {
     const width = 180;
     const height = 8;
     const readyRatio = 1 - cooldownRatio;
 
     this.hudView.rect(x, y, width, height).fill(gameColors.ui.barShade);
     this.hudView.rect(x + 2, y + 2, width - 4, height - 4).fill(gameColors.ui.emptyBar);
-    this.hudView.rect(x, y, width * readyRatio, height).fill(gameColors.accent.primary);
+    this.hudView.rect(x, y, width * readyRatio, height).fill(fillColor);
     this.hudView.rect(x, y, width * readyRatio, 2).fill({
-      color: gameColors.accent.light,
+      color: gameColors.ui.text,
       alpha: 0.45,
     });
     this.hudView.rect(x, y, width, height).stroke({ color: gameColors.ui.borderLight, width: 1 });
   }
 
-  private renderPlayer(position: Vector2, radius: number): void {
+  private renderPlayer(position: Vector2, radius: number, dashFlashSeconds: number): void {
     this.playerView.clear();
     this.playerView.ellipse(2, 9, radius * 0.82, radius * 0.34).fill({
       color: gameColors.player.shadow,
       alpha: 0.34,
     });
+    if (dashFlashSeconds > 0) {
+      this.playerView.circle(0, 0, radius + 10).stroke({
+        color: gameColors.player.light,
+        width: 3,
+        alpha: dashFlashSeconds / 0.18,
+      });
+    }
     this.playerView.circle(0, 0, radius + 3).fill(gameColors.player.outline);
     this.playerView.circle(0, 0, radius).fill(gameColors.player.primary);
     this.playerView.rect(-16, 4, 32, 12).fill({ color: gameColors.player.shade, alpha: 0.55 });

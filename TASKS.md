@@ -107,10 +107,10 @@ Goal: Add one active ability.
 ### Subtasks
 
 - [x] Create Ability type
-- [ ] Implement cooldown system
-- [ ] Add one simple ability (e.g. dash or ranged attack)
-- [ ] Bind ability to input
-- [ ] Show basic feedback (console or simple visual)
+- [x] Implement cooldown system
+- [x] Add one simple ability (e.g. dash or ranged attack)
+- [x] Bind ability to input
+- [x] Show basic feedback (console or simple visual)
 
 ---
 
@@ -122,8 +122,8 @@ Goal: Provide minimal player feedback.
 
 - [x] Display player health
 - [x] Display enemy health
-- [ ] Display ability cooldown
-- [ ] Keep UI simple (React components)
+- [x] Display ability cooldown
+- [x] Keep UI simple (React components)
 - [x] Display basic attack cooldown
 
 ---
