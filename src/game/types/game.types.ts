@@ -21,8 +21,29 @@ export type ArenaState = {
   height: number;
 };
 
+export type ArenaEventPhase = "idle" | "active" | "completed";
+
+export type ArenaEventId = "shrinking-walls";
+
+export type ArenaEventState = {
+  id: ArenaEventId;
+  phase: ArenaEventPhase;
+  elapsedSeconds: number;
+};
+
+export type ArenaEventsState = {
+  elapsedSeconds: number;
+  activeEvent: ArenaEventState | null;
+};
+
+export type ArenaEventContext = {
+  arena: ArenaState;
+  player: PlayerState;
+};
+
 export type GameState = {
   arena: ArenaState;
+  arenaEvents: ArenaEventsState;
   camera: CameraState;
   player: PlayerState;
 };

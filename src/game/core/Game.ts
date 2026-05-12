@@ -2,6 +2,7 @@ import { DashAbility } from "../combat/Ability";
 import { BasicAttack } from "../combat/BasicAttack";
 import { Health } from "../combat/Health";
 import { DummyEnemy } from "../entities/DummyEnemy";
+import { ArenaEventSystem } from "../systems/ArenaEventSystem";
 import { MovementSystem } from "../systems/MovementSystem";
 import type { GameState, Vector2 } from "../types/game.types";
 import { Camera } from "./Camera";
@@ -15,6 +16,7 @@ export class Game {
   private readonly input = new Input();
   private readonly basicAttack = new BasicAttack(90, 20, 0.6);
   private readonly dashAbility = new DashAbility(180, 1.8);
+  private readonly arenaEventSystem = new ArenaEventSystem();
   private readonly cameraSystem = new Camera();
   private readonly movementSystem = new MovementSystem();
 
@@ -27,6 +29,10 @@ export class Game {
     arena: {
       width: 1800,
       height: 1200,
+    },
+    arenaEvents: {
+      elapsedSeconds: 0,
+      activeEvent: null,
     },
     camera: {
       position: { x: 900, y: 600 },
@@ -83,6 +89,10 @@ export class Game {
       this.state.arena,
     );
     this.updateDashAbility(deltaSeconds);
+    this.arenaEventSystem.update(this.state.arenaEvents, deltaSeconds, {
+      arena: this.state.arena,
+      player: this.state.player,
+    });
     this.cameraSystem.update(this.state.camera, this.state.player.position, deltaSeconds);
     this.updateCombatFeedback(deltaSeconds);
     this.updateBasicAttack(deltaSeconds);
@@ -136,6 +146,7 @@ export class Game {
     this.state.player.position.y = 600;
     this.state.player.velocity.x = 0;
     this.state.player.velocity.y = 0;
+    this.arenaEventSystem.reset(this.state.arenaEvents);
     this.dummyEnemy.position.x = 1200;
     this.dummyEnemy.position.y = 600;
     this.dummyEnemy.health.heal(this.dummyEnemy.health.state.maxHealth);

@@ -150,7 +150,7 @@ Goal: Introduce dynamic arena behavior.
 
 ### Subtasks
 
-- [ ] Create event system structure
+- [x] Create event system structure
 - [ ] Implement timed events
 - [ ] Add first arena event (e.g. shrinking walls)
 
