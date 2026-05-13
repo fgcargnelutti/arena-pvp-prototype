@@ -32,7 +32,15 @@ export class Game {
     },
     arenaEvents: {
       elapsedSeconds: 0,
+      scheduledEvents: [
+        {
+          id: "shrinking-walls",
+          startsAtSeconds: 12,
+          durationSeconds: 5,
+        },
+      ],
       activeEvent: null,
+      completedEventIds: [],
     },
     camera: {
       position: { x: 900, y: 600 },

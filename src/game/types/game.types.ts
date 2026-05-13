@@ -29,11 +29,20 @@ export type ArenaEventState = {
   id: ArenaEventId;
   phase: ArenaEventPhase;
   elapsedSeconds: number;
+  durationSeconds: number;
+};
+
+export type ArenaEventSchedule = {
+  id: ArenaEventId;
+  startsAtSeconds: number;
+  durationSeconds: number;
 };
 
 export type ArenaEventsState = {
   elapsedSeconds: number;
+  scheduledEvents: ArenaEventSchedule[];
   activeEvent: ArenaEventState | null;
+  completedEventIds: ArenaEventId[];
 };
 
 export type ArenaEventContext = {
