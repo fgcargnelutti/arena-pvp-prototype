@@ -76,13 +76,13 @@ export class DashAbility {
 
     player.position.x = clamp(
       player.position.x + normalizedDirection.x * this.distance,
-      player.radius,
-      arena.width - player.radius,
+      arena.playableBounds.left + player.radius,
+      arena.playableBounds.right - player.radius,
     );
     player.position.y = clamp(
       player.position.y + normalizedDirection.y * this.distance,
-      player.radius,
-      arena.height - player.radius,
+      arena.playableBounds.top + player.radius,
+      arena.playableBounds.bottom - player.radius,
     );
     player.velocity.x = normalizedDirection.x * this.distance;
     player.velocity.y = normalizedDirection.y * this.distance;

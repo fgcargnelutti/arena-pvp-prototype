@@ -1,6 +1,6 @@
 import { Application, Container, Graphics, Text } from "pixi.js";
 import type { HealthState } from "../combat/Health";
-import type { ArenaState, GameState, Vector2 } from "../types/game.types";
+import type { ArenaBounds, ArenaState, GameState, Vector2 } from "../types/game.types";
 import { gameColors } from "../utils/colors";
 import { clamp } from "../utils/math";
 
@@ -26,6 +26,7 @@ export class GameRenderer {
   private readonly container: HTMLElement;
   private readonly world = new Container();
   private readonly arenaView = new Graphics();
+  private readonly arenaEventView = new Graphics();
   private readonly enemyView = new Graphics();
   private readonly playerView = new Graphics();
   private readonly hudView = new Graphics();
@@ -53,7 +54,7 @@ export class GameRenderer {
 
     this.container.appendChild(this.app.canvas);
     this.app.stage.addChild(this.world, this.hudView, this.winMessage);
-    this.world.addChild(this.arenaView, this.enemyView, this.playerView);
+    this.world.addChild(this.arenaView, this.arenaEventView, this.enemyView, this.playerView);
     this.winMessage.anchor.set(0.5);
     this.winMessage.visible = false;
 
@@ -87,6 +88,7 @@ export class GameRenderer {
     this.world.position.set(viewportWidth / 2 - cameraX, viewportHeight / 2 - cameraY);
     this.enemyView.position.set(snapshot.enemy.position.x, snapshot.enemy.position.y);
     this.playerView.position.set(player.position.x, player.position.y);
+    this.renderArenaEvents(arena);
     this.renderEnemy(snapshot.enemy, snapshot.enemyHitFlashSeconds);
     this.renderHealthBars(
       snapshot.playerHealth,
@@ -145,6 +147,52 @@ export class GameRenderer {
       color: gameColors.arena.borderHighlight,
       alpha: 0.22,
     });
+  }
+
+  private renderArenaEvents(arena: ArenaState): void {
+    this.arenaEventView.clear();
+
+    const bounds = arena.playableBounds;
+
+    if (this.isFullArenaBounds(arena, bounds)) {
+      return;
+    }
+
+    this.arenaEventView.rect(0, 0, arena.width, bounds.top).fill({
+      color: gameColors.accent.danger,
+      alpha: 0.18,
+    });
+    this.arenaEventView.rect(0, bounds.bottom, arena.width, arena.height - bounds.bottom).fill({
+      color: gameColors.accent.danger,
+      alpha: 0.18,
+    });
+    this.arenaEventView.rect(0, bounds.top, bounds.left, bounds.bottom - bounds.top).fill({
+      color: gameColors.accent.danger,
+      alpha: 0.18,
+    });
+    this.arenaEventView.rect(bounds.right, bounds.top, arena.width - bounds.right, bounds.bottom - bounds.top).fill({
+      color: gameColors.accent.danger,
+      alpha: 0.18,
+    });
+    this.arenaEventView.rect(bounds.left, bounds.top, bounds.right - bounds.left, bounds.bottom - bounds.top).stroke({
+      color: gameColors.accent.danger,
+      width: 5,
+      alpha: 0.8,
+    });
+    this.arenaEventView.rect(bounds.left + 8, bounds.top + 8, bounds.right - bounds.left - 16, bounds.bottom - bounds.top - 16).stroke({
+      color: gameColors.accent.light,
+      width: 1,
+      alpha: 0.32,
+    });
+  }
+
+  private isFullArenaBounds(arena: ArenaState, bounds: ArenaBounds): boolean {
+    return (
+      bounds.left === 0 &&
+      bounds.top === 0 &&
+      bounds.right === arena.width &&
+      bounds.bottom === arena.height
+    );
   }
 
   private renderHealthBars(

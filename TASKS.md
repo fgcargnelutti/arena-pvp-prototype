@@ -152,7 +152,7 @@ Goal: Introduce dynamic arena behavior.
 
 - [x] Create event system structure
 - [x] Implement timed events
-- [ ] Add first arena event (e.g. shrinking walls)
+- [x] Add first arena event (e.g. shrinking walls)
 
 ---
 

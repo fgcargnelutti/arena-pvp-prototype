@@ -17,8 +17,16 @@ export class MovementSystem {
     };
 
     const clampedPosition = {
-      x: clamp(nextPosition.x, player.radius, arenaBounds.width - player.radius),
-      y: clamp(nextPosition.y, player.radius, arenaBounds.height - player.radius),
+      x: clamp(
+        nextPosition.x,
+        arenaBounds.playableBounds.left + player.radius,
+        arenaBounds.playableBounds.right - player.radius,
+      ),
+      y: clamp(
+        nextPosition.y,
+        arenaBounds.playableBounds.top + player.radius,
+        arenaBounds.playableBounds.bottom - player.radius,
+      ),
     };
 
     player.position.x = clampedPosition.x;

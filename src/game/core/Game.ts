@@ -29,6 +29,12 @@ export class Game {
     arena: {
       width: 1800,
       height: 1200,
+      playableBounds: {
+        left: 0,
+        top: 0,
+        right: 1800,
+        bottom: 1200,
+      },
     },
     arenaEvents: {
       elapsedSeconds: 0,
@@ -90,6 +96,10 @@ export class Game {
       this.lastMoveDirection = movementInput;
     }
 
+    this.arenaEventSystem.update(this.state.arenaEvents, deltaSeconds, {
+      arena: this.state.arena,
+      player: this.state.player,
+    });
     this.movementSystem.update(
       this.state.player,
       movementInput,
@@ -97,10 +107,6 @@ export class Game {
       this.state.arena,
     );
     this.updateDashAbility(deltaSeconds);
-    this.arenaEventSystem.update(this.state.arenaEvents, deltaSeconds, {
-      arena: this.state.arena,
-      player: this.state.player,
-    });
     this.cameraSystem.update(this.state.camera, this.state.player.position, deltaSeconds);
     this.updateCombatFeedback(deltaSeconds);
     this.updateBasicAttack(deltaSeconds);
@@ -154,7 +160,10 @@ export class Game {
     this.state.player.position.y = 600;
     this.state.player.velocity.x = 0;
     this.state.player.velocity.y = 0;
-    this.arenaEventSystem.reset(this.state.arenaEvents);
+    this.arenaEventSystem.reset(this.state.arenaEvents, {
+      arena: this.state.arena,
+      player: this.state.player,
+    });
     this.dummyEnemy.position.x = 1200;
     this.dummyEnemy.position.y = 600;
     this.dummyEnemy.health.heal(this.dummyEnemy.health.state.maxHealth);

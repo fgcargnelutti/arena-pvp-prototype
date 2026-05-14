@@ -16,9 +16,17 @@ export type CameraState = {
   followLerp: number;
 };
 
+export type ArenaBounds = {
+  left: number;
+  top: number;
+  right: number;
+  bottom: number;
+};
+
 export type ArenaState = {
   width: number;
   height: number;
+  playableBounds: ArenaBounds;
 };
 
 export type ArenaEventPhase = "idle" | "active" | "completed";
