@@ -3,6 +3,7 @@ import { BasicAttack } from "../combat/BasicAttack";
 import { Health } from "../combat/Health";
 import { DummyEnemy } from "../entities/DummyEnemy";
 import { ArenaEventSystem } from "../systems/ArenaEventSystem";
+import { EnemyAISystem } from "../systems/EnemyAISystem";
 import { MovementSystem } from "../systems/MovementSystem";
 import type { GameState, Vector2 } from "../types/game.types";
 import { Camera } from "./Camera";
@@ -18,6 +19,7 @@ export class Game {
   private readonly dashAbility = new DashAbility(180, 1.8);
   private readonly arenaEventSystem = new ArenaEventSystem();
   private readonly cameraSystem = new Camera();
+  private readonly enemyAISystem = new EnemyAISystem();
   private readonly movementSystem = new MovementSystem();
 
   private isRunning = false;
@@ -105,6 +107,12 @@ export class Game {
       movementInput,
       deltaSeconds,
       this.state.arena,
+    );
+    this.enemyAISystem.update(
+      this.dummyEnemy,
+      this.state.player,
+      this.state.arena,
+      deltaSeconds,
     );
     this.updateDashAbility(deltaSeconds);
     this.cameraSystem.update(this.state.camera, this.state.player.position, deltaSeconds);

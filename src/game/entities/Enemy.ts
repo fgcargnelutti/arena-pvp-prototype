@@ -11,6 +11,7 @@ export type EnemyConfig = {
   behavior: EnemyBehavior;
   position: Vector2;
   radius: number;
+  speed: number;
   maxHealth: number;
 };
 
@@ -19,7 +20,9 @@ export class Enemy {
   public readonly kind: EnemyKind;
   public readonly behavior: EnemyBehavior;
   public readonly position: Vector2;
+  public readonly velocity: Vector2;
   public readonly radius: number;
+  public readonly speed: number;
   public readonly health: Health;
 
   public constructor(config: EnemyConfig) {
@@ -27,7 +30,9 @@ export class Enemy {
     this.kind = config.kind;
     this.behavior = config.behavior;
     this.position = { ...config.position };
+    this.velocity = { x: 0, y: 0 };
     this.radius = config.radius;
+    this.speed = config.speed;
     this.health = new Health(config.maxHealth);
   }
 

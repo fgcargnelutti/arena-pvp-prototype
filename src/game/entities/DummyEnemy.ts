@@ -6,9 +6,10 @@ export class DummyEnemy extends Enemy {
     super({
       id: "dummy-enemy",
       kind: "dummy",
-      behavior: "static",
+      behavior: "follow",
       position,
       radius,
+      speed: 170,
       maxHealth,
     });
   }
