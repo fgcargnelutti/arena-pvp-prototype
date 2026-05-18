@@ -19,6 +19,7 @@ type GameRenderSnapshot = {
   dashCooldownRatio: number;
   enemyHitFlashSeconds: ReadonlyMap<string, number>;
   playerDashFlashSeconds: number;
+  speedBuffRatio: number;
   isWin: boolean;
 };
 
@@ -95,8 +96,9 @@ export class GameRenderer {
       snapshot.enemyHealth,
       snapshot.attackCooldownRatio,
       snapshot.dashCooldownRatio,
+      snapshot.speedBuffRatio,
     );
-    this.renderPlayer(player.position, player.radius, snapshot.playerDashFlashSeconds);
+    this.renderPlayer(player.position, player.radius, snapshot.playerDashFlashSeconds, snapshot.speedBuffRatio);
     this.renderWinMessage(viewportWidth, viewportHeight, snapshot.isWin);
   }
 
@@ -200,15 +202,17 @@ export class GameRenderer {
     enemyHealth: HealthState,
     attackCooldownRatio: number,
     dashCooldownRatio: number,
+    speedBuffRatio: number,
   ): void {
     this.hudView.clear();
-    this.hudView.rect(16, 16, 200, 96).fill(gameColors.ui.panelTransparent);
-    this.hudView.rect(16, 16, 200, 96).stroke({ color: gameColors.ui.border, width: 1 });
+    this.hudView.rect(16, 16, 200, 112).fill(gameColors.ui.panelTransparent);
+    this.hudView.rect(16, 16, 200, 112).stroke({ color: gameColors.ui.border, width: 1 });
 
     this.drawHealthBar(26, 26, playerHealth, gameColors.player.primary);
     this.drawHealthBar(26, 54, enemyHealth, gameColors.enemy.primary);
     this.drawCooldownBar(24, 80, attackCooldownRatio, gameColors.accent.primary);
     this.drawCooldownBar(24, 96, dashCooldownRatio, gameColors.player.light);
+    this.drawCooldownBar(24, 112, 1 - speedBuffRatio, gameColors.accent.light);
   }
 
   private drawHealthBar(x: number, y: number, health: HealthState, fillColor: string): void {
@@ -238,12 +242,24 @@ export class GameRenderer {
     this.hudView.rect(x, y, width, height).stroke({ color: gameColors.ui.borderLight, width: 1 });
   }
 
-  private renderPlayer(position: Vector2, radius: number, dashFlashSeconds: number): void {
+  private renderPlayer(
+    position: Vector2,
+    radius: number,
+    dashFlashSeconds: number,
+    speedBuffRatio: number,
+  ): void {
     this.playerView.clear();
     this.playerView.ellipse(2, 9, radius * 0.82, radius * 0.34).fill({
       color: gameColors.player.shadow,
       alpha: 0.34,
     });
+    if (speedBuffRatio > 0) {
+      this.playerView.circle(0, 0, radius + 7).stroke({
+        color: gameColors.accent.light,
+        width: 2,
+        alpha: 0.3 + speedBuffRatio * 0.4,
+      });
+    }
     if (dashFlashSeconds > 0) {
       this.playerView.circle(0, 0, radius + 10).stroke({
         color: gameColors.player.light,

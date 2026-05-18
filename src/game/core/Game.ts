@@ -13,6 +13,10 @@ import { Camera } from "./Camera";
 import { GameRenderer } from "./GameRenderer";
 import { Input } from "./Input";
 
+const BASE_PLAYER_SPEED = 320;
+const CREEP_KILL_SPEED_BUFF_SECONDS = 5;
+const CREEP_KILL_SPEED_MULTIPLIER = 1.2;
+
 export class Game {
   private readonly renderer: GameRenderer;
   private readonly dummyEnemy = new DummyEnemy({ x: 1200, y: 600 }, 28, 100);
@@ -30,6 +34,7 @@ export class Game {
   private isRunning = false;
   private readonly enemyHitFlashSeconds = new Map<string, number>();
   private playerDashFlashSeconds = 0;
+  private playerSpeedBuffRemainingSeconds = 0;
   private lastMoveDirection: Vector2 = { x: 1, y: 0 };
 
   private readonly state: GameState = {
@@ -64,7 +69,7 @@ export class Game {
       position: { x: 900, y: 600 },
       velocity: { x: 0, y: 0 },
       radius: 24,
-      speed: 320,
+      speed: BASE_PLAYER_SPEED,
     },
   };
 
@@ -107,6 +112,7 @@ export class Game {
       arena: this.state.arena,
       player: this.state.player,
     });
+    this.updatePlayerSpeedBuff(deltaSeconds);
     this.movementSystem.update(
       this.state.player,
       movementInput,
@@ -134,6 +140,17 @@ export class Game {
     this.updateBasicAttack(deltaSeconds);
     this.removeDefeatedSpawnedEnemies();
     this.updateRestart();
+  }
+
+  private updatePlayerSpeedBuff(deltaSeconds: number): void {
+    this.playerSpeedBuffRemainingSeconds = Math.max(
+      this.playerSpeedBuffRemainingSeconds - deltaSeconds,
+      0,
+    );
+    this.state.player.speed =
+      this.playerSpeedBuffRemainingSeconds > 0
+        ? BASE_PLAYER_SPEED * CREEP_KILL_SPEED_MULTIPLIER
+        : BASE_PLAYER_SPEED;
   }
 
   private updateCombatFeedback(deltaSeconds: number): void {
@@ -214,8 +231,14 @@ export class Game {
       }
 
       this.enemyHitFlashSeconds.delete(enemy.id);
+      this.grantCreepKillReward();
       this.enemies.splice(index, 1);
     }
+  }
+
+  private grantCreepKillReward(): void {
+    this.playerSpeedBuffRemainingSeconds = CREEP_KILL_SPEED_BUFF_SECONDS;
+    this.state.player.speed = BASE_PLAYER_SPEED * CREEP_KILL_SPEED_MULTIPLIER;
   }
 
   private updateRestart(): void {
@@ -233,6 +256,8 @@ export class Game {
     });
     this.enemySpawnSystem.reset();
     this.enemyHitFlashSeconds.clear();
+    this.playerSpeedBuffRemainingSeconds = 0;
+    this.state.player.speed = BASE_PLAYER_SPEED;
     this.enemies.splice(1);
     this.dummyEnemy.position.x = 1200;
     this.dummyEnemy.position.y = 600;
@@ -249,6 +274,7 @@ export class Game {
       dashCooldownRatio: this.dashAbility.getCooldownRatio(),
       enemyHitFlashSeconds: this.enemyHitFlashSeconds,
       playerDashFlashSeconds: this.playerDashFlashSeconds,
+      speedBuffRatio: this.playerSpeedBuffRemainingSeconds / CREEP_KILL_SPEED_BUFF_SECONDS,
       isWin: !this.dummyEnemy.isAlive(),
     });
   }
