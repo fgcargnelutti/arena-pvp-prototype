@@ -5,18 +5,19 @@ import { gameColors } from "../utils/colors";
 import { clamp } from "../utils/math";
 
 type RenderEntity = {
+  id: string;
   position: Vector2;
   radius: number;
 };
 
 type GameRenderSnapshot = {
   state: GameState;
-  enemy: RenderEntity;
+  enemies: RenderEntity[];
   enemyHealth: HealthState;
   playerHealth: HealthState;
   attackCooldownRatio: number;
   dashCooldownRatio: number;
-  enemyHitFlashSeconds: number;
+  enemyHitFlashSeconds: ReadonlyMap<string, number>;
   playerDashFlashSeconds: number;
   isWin: boolean;
 };
@@ -27,7 +28,7 @@ export class GameRenderer {
   private readonly world = new Container();
   private readonly arenaView = new Graphics();
   private readonly arenaEventView = new Graphics();
-  private readonly enemyView = new Graphics();
+  private readonly enemyViews = new Map<string, Graphics>();
   private readonly playerView = new Graphics();
   private readonly hudView = new Graphics();
   private readonly winMessage = new Text({
@@ -54,7 +55,7 @@ export class GameRenderer {
 
     this.container.appendChild(this.app.canvas);
     this.app.stage.addChild(this.world, this.hudView, this.winMessage);
-    this.world.addChild(this.arenaView, this.arenaEventView, this.enemyView, this.playerView);
+    this.world.addChild(this.arenaView, this.arenaEventView, this.playerView);
     this.winMessage.anchor.set(0.5);
     this.winMessage.visible = false;
 
@@ -86,10 +87,9 @@ export class GameRenderer {
     const cameraY = clamp(camera.position.y, viewportHeight / 2, arena.height - viewportHeight / 2);
 
     this.world.position.set(viewportWidth / 2 - cameraX, viewportHeight / 2 - cameraY);
-    this.enemyView.position.set(snapshot.enemy.position.x, snapshot.enemy.position.y);
     this.playerView.position.set(player.position.x, player.position.y);
     this.renderArenaEvents(arena);
-    this.renderEnemy(snapshot.enemy, snapshot.enemyHitFlashSeconds);
+    this.renderEnemies(snapshot.enemies, snapshot.enemyHitFlashSeconds);
     this.renderHealthBars(
       snapshot.playerHealth,
       snapshot.enemyHealth,
@@ -259,19 +259,43 @@ export class GameRenderer {
     this.playerView.position.set(position.x, position.y);
   }
 
-  private renderEnemy(enemy: RenderEntity, enemyHitFlashSeconds: number): void {
+  private renderEnemies(enemies: RenderEntity[], enemyHitFlashSeconds: ReadonlyMap<string, number>): void {
+    const currentEnemyIds = new Set(enemies.map((enemy) => enemy.id));
+
+    for (const [enemyId, enemyView] of this.enemyViews) {
+      if (!currentEnemyIds.has(enemyId)) {
+        enemyView.destroy();
+        this.enemyViews.delete(enemyId);
+      }
+    }
+
+    for (const enemy of enemies) {
+      let enemyView = this.enemyViews.get(enemy.id);
+
+      if (!enemyView) {
+        enemyView = new Graphics();
+        this.enemyViews.set(enemy.id, enemyView);
+        this.world.addChildAt(enemyView, this.world.getChildIndex(this.playerView));
+      }
+
+      enemyView.position.set(enemy.position.x, enemy.position.y);
+      this.renderEnemy(enemyView, enemy, enemyHitFlashSeconds.get(enemy.id) ?? 0);
+    }
+  }
+
+  private renderEnemy(enemyView: Graphics, enemy: RenderEntity, enemyHitFlashSeconds: number): void {
     const enemyColor = enemyHitFlashSeconds > 0 ? gameColors.enemy.hit : gameColors.enemy.primary;
 
-    this.enemyView.clear();
-    this.enemyView.ellipse(2, 10, enemy.radius * 0.86, enemy.radius * 0.32).fill({
+    enemyView.clear();
+    enemyView.ellipse(2, 10, enemy.radius * 0.86, enemy.radius * 0.32).fill({
       color: gameColors.enemy.shadow,
       alpha: 0.34,
     });
-    this.enemyView.circle(0, 0, enemy.radius + 3).fill(gameColors.enemy.outline);
-    this.enemyView.circle(0, 0, enemy.radius).fill(enemyColor);
-    this.enemyView.rect(-18, 4, 36, 13).fill({ color: gameColors.enemy.shade, alpha: 0.56 });
-    this.enemyView.circle(-9, -9, 9).fill({ color: gameColors.enemy.light, alpha: 0.68 });
-    this.enemyView.rect(9, -3, 8, 16).fill({ color: gameColors.enemy.shade, alpha: 0.42 });
+    enemyView.circle(0, 0, enemy.radius + 3).fill(gameColors.enemy.outline);
+    enemyView.circle(0, 0, enemy.radius).fill(enemyColor);
+    enemyView.rect(-18, 4, 36, 13).fill({ color: gameColors.enemy.shade, alpha: 0.56 });
+    enemyView.circle(-9, -9, 9).fill({ color: gameColors.enemy.light, alpha: 0.68 });
+    enemyView.rect(9, -3, 8, 16).fill({ color: gameColors.enemy.shade, alpha: 0.42 });
   }
 
   private renderWinMessage(viewportWidth: number, viewportHeight: number, isWin: boolean): void {

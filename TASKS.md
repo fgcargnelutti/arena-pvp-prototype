@@ -164,7 +164,7 @@ Goal: Add non-player enemies.
 
 - [x] Create enemy entity type
 - [x] Add simple AI (follow or idle)
-- [ ] Add spawn logic
+- [x] Add spawn logic
 - [ ] Reward player for killing enemies (temporary buff)
 
 ---
