@@ -70,6 +70,7 @@ export class Game {
       velocity: { x: 0, y: 0 },
       radius: 24,
       speed: BASE_PLAYER_SPEED,
+      activeBuffs: [],
     },
   };
 

@@ -50,5 +50,6 @@ const createDefaultPlayerState = (): PlayerState => {
     velocity: { x: 0, y: 0 },
     radius: 24,
     speed: 360,
+    activeBuffs: [],
   };
 };

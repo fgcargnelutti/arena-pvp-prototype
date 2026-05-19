@@ -3,11 +3,33 @@ export type Vector2 = {
   y: number;
 };
 
+export type BuffId = "creep-speed";
+
+export type BuffEffectType = "move-speed-multiplier" | "damage-multiplier";
+
+export type BuffEffect = {
+  type: BuffEffectType;
+  value: number;
+};
+
+export type BuffDefinition = {
+  id: BuffId;
+  name: string;
+  durationSeconds: number;
+  effects: BuffEffect[];
+};
+
+export type ActiveBuff = {
+  id: BuffId;
+  remainingSeconds: number;
+};
+
 export type PlayerState = {
   position: Vector2;
   velocity: Vector2;
   radius: number;
   speed: number;
+  activeBuffs: ActiveBuff[];
 };
 
 export type CameraState = {
