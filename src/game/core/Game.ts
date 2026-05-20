@@ -1,9 +1,11 @@
 import { DashAbility } from "../combat/Ability";
 import { BasicAttack } from "../combat/BasicAttack";
 import { Health } from "../combat/Health";
+import { CREEP_SPEED_BUFF, BUFF_DEFINITIONS } from "../data/buffs";
 import { DummyEnemy } from "../entities/DummyEnemy";
 import type { Enemy } from "../entities/Enemy";
 import { ArenaEventSystem } from "../systems/ArenaEventSystem";
+import { BuffSystem } from "../systems/BuffSystem";
 import { EnemyAISystem } from "../systems/EnemyAISystem";
 import { EnemySpawnSystem } from "../systems/EnemySpawnSystem";
 import { MovementSystem } from "../systems/MovementSystem";
@@ -14,7 +16,6 @@ import { GameRenderer } from "./GameRenderer";
 import { Input } from "./Input";
 
 const BASE_PLAYER_SPEED = 320;
-const CREEP_KILL_SPEED_BUFF_SECONDS = 5;
 const CREEP_KILL_SPEED_MULTIPLIER = 1.2;
 
 export class Game {
@@ -26,6 +27,7 @@ export class Game {
   private readonly basicAttack = new BasicAttack(90, 20, 0.6);
   private readonly dashAbility = new DashAbility(180, 1.8);
   private readonly arenaEventSystem = new ArenaEventSystem();
+  private readonly buffSystem = new BuffSystem(BUFF_DEFINITIONS);
   private readonly cameraSystem = new Camera();
   private readonly enemyAISystem = new EnemyAISystem();
   private readonly enemySpawnSystem = new EnemySpawnSystem();
@@ -34,7 +36,6 @@ export class Game {
   private isRunning = false;
   private readonly enemyHitFlashSeconds = new Map<string, number>();
   private playerDashFlashSeconds = 0;
-  private playerSpeedBuffRemainingSeconds = 0;
   private lastMoveDirection: Vector2 = { x: 1, y: 0 };
 
   private readonly state: GameState = {
@@ -113,7 +114,7 @@ export class Game {
       arena: this.state.arena,
       player: this.state.player,
     });
-    this.updatePlayerSpeedBuff(deltaSeconds);
+    this.updatePlayerBuffs(deltaSeconds);
     this.movementSystem.update(
       this.state.player,
       movementInput,
@@ -143,15 +144,11 @@ export class Game {
     this.updateRestart();
   }
 
-  private updatePlayerSpeedBuff(deltaSeconds: number): void {
-    this.playerSpeedBuffRemainingSeconds = Math.max(
-      this.playerSpeedBuffRemainingSeconds - deltaSeconds,
-      0,
-    );
-    this.state.player.speed =
-      this.playerSpeedBuffRemainingSeconds > 0
-        ? BASE_PLAYER_SPEED * CREEP_KILL_SPEED_MULTIPLIER
-        : BASE_PLAYER_SPEED;
+  private updatePlayerBuffs(deltaSeconds: number): void {
+    this.buffSystem.update(this.state.player, deltaSeconds);
+    this.state.player.speed = this.buffSystem.hasActiveBuff(this.state.player, CREEP_SPEED_BUFF.id)
+      ? BASE_PLAYER_SPEED * CREEP_KILL_SPEED_MULTIPLIER
+      : BASE_PLAYER_SPEED;
   }
 
   private updateCombatFeedback(deltaSeconds: number): void {
@@ -238,7 +235,7 @@ export class Game {
   }
 
   private grantCreepKillReward(): void {
-    this.playerSpeedBuffRemainingSeconds = CREEP_KILL_SPEED_BUFF_SECONDS;
+    this.buffSystem.addOrRefresh(this.state.player, CREEP_SPEED_BUFF.id);
     this.state.player.speed = BASE_PLAYER_SPEED * CREEP_KILL_SPEED_MULTIPLIER;
   }
 
@@ -257,7 +254,7 @@ export class Game {
     });
     this.enemySpawnSystem.reset();
     this.enemyHitFlashSeconds.clear();
-    this.playerSpeedBuffRemainingSeconds = 0;
+    this.buffSystem.clear(this.state.player);
     this.state.player.speed = BASE_PLAYER_SPEED;
     this.enemies.splice(1);
     this.dummyEnemy.position.x = 1200;
@@ -275,7 +272,7 @@ export class Game {
       dashCooldownRatio: this.dashAbility.getCooldownRatio(),
       enemyHitFlashSeconds: this.enemyHitFlashSeconds,
       playerDashFlashSeconds: this.playerDashFlashSeconds,
-      speedBuffRatio: this.playerSpeedBuffRemainingSeconds / CREEP_KILL_SPEED_BUFF_SECONDS,
+      speedBuffRatio: this.buffSystem.getRemainingRatio(this.state.player, CREEP_SPEED_BUFF.id),
       isWin: !this.dummyEnemy.isAlive(),
     });
   }

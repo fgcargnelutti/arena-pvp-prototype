@@ -176,7 +176,7 @@ Goal: Add temporary gameplay modifiers.
 ### Subtasks
 
 - [x] Define buff structure
-- [ ] Implement duration system
+- [x] Implement duration system
 - [ ] Apply buff effects (e.g. speed, damage)
 
 ---
