@@ -32,7 +32,11 @@ export class BasicAttack {
     return this.cooldownRemaining / this.cooldownSeconds;
   }
 
-  public tryAttack(attackerPosition: Vector2, target: AttackTarget): boolean {
+  public tryAttack(
+    attackerPosition: Vector2,
+    target: AttackTarget,
+    damageMultiplier = 1,
+  ): boolean {
     if (this.cooldownRemaining > 0 || !target.health.isAlive()) {
       return false;
     }
@@ -43,7 +47,7 @@ export class BasicAttack {
       return false;
     }
 
-    target.health.takeDamage(this.damage);
+    target.health.takeDamage(this.damage * damageMultiplier);
     this.cooldownRemaining = this.cooldownSeconds;
 
     return true;

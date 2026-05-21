@@ -177,7 +177,7 @@ Goal: Add temporary gameplay modifiers.
 
 - [x] Define buff structure
 - [x] Implement duration system
-- [ ] Apply buff effects (e.g. speed, damage)
+- [x] Apply buff effects (e.g. speed, damage)
 
 ---
 

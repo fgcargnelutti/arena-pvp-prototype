@@ -1,4 +1,10 @@
-import type { ActiveBuff, BuffDefinition, BuffId, PlayerState } from "../types/game.types";
+import type {
+  ActiveBuff,
+  BuffDefinition,
+  BuffEffectType,
+  BuffId,
+  PlayerState,
+} from "../types/game.types";
 
 export class BuffSystem {
   private readonly definitions: Record<BuffId, BuffDefinition>;
@@ -33,10 +39,6 @@ export class BuffSystem {
     });
   }
 
-  public hasActiveBuff(player: PlayerState, buffId: BuffId): boolean {
-    return this.findActiveBuff(player, buffId) !== undefined;
-  }
-
   public getRemainingRatio(player: PlayerState, buffId: BuffId): number {
     const activeBuff = this.findActiveBuff(player, buffId);
 
@@ -45,6 +47,18 @@ export class BuffSystem {
     }
 
     return activeBuff.remainingSeconds / this.definitions[buffId].durationSeconds;
+  }
+
+  public getEffectMultiplier(player: PlayerState, effectType: BuffEffectType): number {
+    return player.activeBuffs.reduce((multiplier, activeBuff) => {
+      const definition = this.definitions[activeBuff.id];
+      const matchingEffects = definition.effects.filter((effect) => effect.type === effectType);
+
+      return matchingEffects.reduce(
+        (nextMultiplier, effect) => nextMultiplier * effect.value,
+        multiplier,
+      );
+    }, 1);
   }
 
   public clear(player: PlayerState): void {

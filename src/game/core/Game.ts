@@ -16,7 +16,6 @@ import { GameRenderer } from "./GameRenderer";
 import { Input } from "./Input";
 
 const BASE_PLAYER_SPEED = 320;
-const CREEP_KILL_SPEED_MULTIPLIER = 1.2;
 
 export class Game {
   private readonly renderer: GameRenderer;
@@ -146,9 +145,7 @@ export class Game {
 
   private updatePlayerBuffs(deltaSeconds: number): void {
     this.buffSystem.update(this.state.player, deltaSeconds);
-    this.state.player.speed = this.buffSystem.hasActiveBuff(this.state.player, CREEP_SPEED_BUFF.id)
-      ? BASE_PLAYER_SPEED * CREEP_KILL_SPEED_MULTIPLIER
-      : BASE_PLAYER_SPEED;
+    this.updatePlayerSpeedFromBuffs();
   }
 
   private updateCombatFeedback(deltaSeconds: number): void {
@@ -192,7 +189,11 @@ export class Game {
       return;
     }
 
-    const didHit = this.basicAttack.tryAttack(this.state.player.position, target);
+    const didHit = this.basicAttack.tryAttack(
+      this.state.player.position,
+      target,
+      this.buffSystem.getEffectMultiplier(this.state.player, "damage-multiplier"),
+    );
 
     if (didHit) {
       console.log("hit");
@@ -236,7 +237,13 @@ export class Game {
 
   private grantCreepKillReward(): void {
     this.buffSystem.addOrRefresh(this.state.player, CREEP_SPEED_BUFF.id);
-    this.state.player.speed = BASE_PLAYER_SPEED * CREEP_KILL_SPEED_MULTIPLIER;
+    this.updatePlayerSpeedFromBuffs();
+  }
+
+  private updatePlayerSpeedFromBuffs(): void {
+    this.state.player.speed =
+      BASE_PLAYER_SPEED *
+      this.buffSystem.getEffectMultiplier(this.state.player, "move-speed-multiplier");
   }
 
   private updateRestart(): void {
