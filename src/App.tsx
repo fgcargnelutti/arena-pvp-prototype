@@ -9,6 +9,7 @@ import NpcTraderScreen from "./app/screens/NpcTraderScreen";
 import PvpLobbyScreen from "./app/screens/PvpLobbyScreen";
 import ResultsScreen from "./app/screens/ResultsScreen";
 import SplashScreen from "./app/screens/SplashScreen";
+import { matchPhaseLabels, type MatchPhase } from "./app/matchFlow";
 
 type AppScreen =
   | "splash"
@@ -34,6 +35,7 @@ const defaultMatchContext: MatchContext = {
 
 function App() {
   const [screen, setScreen] = useState<AppScreen>("splash");
+  const [matchPhase, setMatchPhase] = useState<MatchPhase>("lobby");
   const [matchContext, setMatchContext] = useState<MatchContext>(defaultMatchContext);
 
   if (screen === "splash") {
@@ -67,8 +69,14 @@ function App() {
     return (
       <MatchModeSelectScreen
         onBack={() => setScreen("main-hub")}
-        onPvp={() => setScreen("pvp-lobby")}
-        onBossBattle={() => setScreen("boss-battle-lobby")}
+        onPvp={() => {
+          setMatchPhase("lobby");
+          setScreen("pvp-lobby");
+        }}
+        onBossBattle={() => {
+          setMatchPhase("lobby");
+          setScreen("boss-battle-lobby");
+        }}
       />
     );
   }
@@ -79,6 +87,7 @@ function App() {
         onBack={() => setScreen("match-mode-select")}
         onStart={(selectedArena) => {
           setMatchContext({ modeLabel: "PvP Skirmish", arenaLabel: selectedArena });
+          setMatchPhase("in-game");
           setScreen("game");
         }}
       />
@@ -91,6 +100,7 @@ function App() {
         onBack={() => setScreen("match-mode-select")}
         onStart={() => {
           setMatchContext({ modeLabel: "Boss Battle", arenaLabel: "Ancient Lion Lair" });
+          setMatchPhase("in-game");
           setScreen("game");
         }}
       />
@@ -102,7 +112,11 @@ function App() {
       <GameScreen
         modeLabel={matchContext.modeLabel}
         arenaLabel={matchContext.arenaLabel}
-        onFinish={() => setScreen("results")}
+        matchPhaseLabel={matchPhaseLabels[matchPhase]}
+        onFinish={() => {
+          setMatchPhase("end");
+          setScreen("results");
+        }}
       />
     );
   }
@@ -111,7 +125,11 @@ function App() {
     <ResultsScreen
       modeLabel={matchContext.modeLabel}
       arenaLabel={matchContext.arenaLabel}
-      onFindAnother={() => setScreen("match-mode-select")}
+      matchPhaseLabel={matchPhaseLabels[matchPhase]}
+      onFindAnother={() => {
+        setMatchPhase("lobby");
+        setScreen("match-mode-select");
+      }}
       onMainHub={() => setScreen("main-hub")}
     />
   );

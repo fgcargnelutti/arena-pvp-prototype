@@ -202,7 +202,7 @@ Goal: Simulate match lifecycle.
 
 ### Subtasks
 
-- [ ] Create match states (lobby, in-game, end)
+- [x] Create match states (lobby, in-game, end)
 - [x] Transition between states
 - [x] Reset game after match
 - [x] Create initial React screen flow (superseded by Steam-style shell)

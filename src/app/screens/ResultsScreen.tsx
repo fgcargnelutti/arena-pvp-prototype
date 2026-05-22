@@ -1,17 +1,19 @@
 type ResultsScreenProps = {
   modeLabel: string;
   arenaLabel: string;
+  matchPhaseLabel: string;
   onFindAnother: () => void;
   onMainHub: () => void;
 };
 
-function ResultsScreen({ modeLabel, arenaLabel, onFindAnother, onMainHub }: ResultsScreenProps) {
+function ResultsScreen({ modeLabel, arenaLabel, matchPhaseLabel, onFindAnother, onMainHub }: ResultsScreenProps) {
   return (
     <main className="screen">
       <section className="screen-panel screen-panel-wide">
         <p className="screen-kicker">Results</p>
         <h1>Match Complete</h1>
         <div className="placeholder-list">
+          <span>Match State: {matchPhaseLabel}</span>
           <span>Mode: {modeLabel}</span>
           <span>Arena: {arenaLabel}</span>
           <span>XP: placeholder reward</span>
