@@ -19,6 +19,18 @@ export type BuffDefinition = {
   effects: BuffEffect[];
 };
 
+export type AbilitySlotId = "basic-attack" | "active-ability";
+
+export type AbilitySlotKind = "basic-attack" | "active";
+
+export type AbilitySlotDefinition = {
+  id: AbilitySlotId;
+  label: string;
+  kind: AbilitySlotKind;
+  inputLabel: string;
+  isRequired: boolean;
+};
+
 export type ActiveBuff = {
   id: BuffId;
   remainingSeconds: number;

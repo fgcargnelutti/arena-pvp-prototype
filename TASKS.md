@@ -216,7 +216,7 @@ Goal: Introduce customization.
 
 ### Subtasks
 
-- [ ] Define ability slots
+- [x] Define ability slots
 - [ ] Create build configuration
 - [ ] Allow swapping abilities
 
