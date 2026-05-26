@@ -1,6 +1,13 @@
 import { useState } from "react";
+import { DEFAULT_PLAYER_BUILD_CONFIG } from "../../game/data/buildConfigs";
+import { ABILITY_SLOT_DEFINITIONS } from "../../game/data/abilitySlots";
 
 const arenas = ["Mid Duel Arena", "Rune Pit", "River Gate"];
+
+const abilityLabels = {
+  "basic-attack": "Basic Attack",
+  dash: "Dash",
+};
 
 type PvpLobbyScreenProps = {
   onBack: () => void;
@@ -11,6 +18,7 @@ function PvpLobbyScreen({ onBack, onStart }: PvpLobbyScreenProps) {
   const [selectedArenas, setSelectedArenas] = useState<string[]>([arenas[0]]);
   const [isReady, setIsReady] = useState(false);
   const [chosenArena, setChosenArena] = useState<string | null>(null);
+  const buildConfig = DEFAULT_PLAYER_BUILD_CONFIG;
 
   const toggleArena = (arena: string) => {
     setChosenArena(null);
@@ -45,8 +53,20 @@ function PvpLobbyScreen({ onBack, onStart }: PvpLobbyScreenProps) {
         <div className="lobby-grid">
           <span>Local Player: SteamPlayer</span>
           <span>Opponent: Found / Ready</span>
-          <span>Character: Blade Adept placeholder</span>
+          <span>Character: {buildConfig.characterName}</span>
+          <span>Build: {buildConfig.name}</span>
           <span>Arena Pool: select up to 2</span>
+        </div>
+        <div className="build-summary">
+          {buildConfig.abilityAssignments.map((assignment) => {
+            const slot = ABILITY_SLOT_DEFINITIONS[assignment.slotId];
+
+            return (
+              <span key={assignment.slotId}>
+                {slot.label} ({slot.inputLabel}): {abilityLabels[assignment.abilityId]}
+              </span>
+            );
+          })}
         </div>
         <div className="arena-options">
           {arenas.map((arena) => (

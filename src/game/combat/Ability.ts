@@ -1,7 +1,5 @@
-import type { ArenaState, PlayerState, Vector2 } from "../types/game.types";
+import type { AbilityId, ArenaState, PlayerState, Vector2 } from "../types/game.types";
 import { clamp } from "../utils/math";
-
-export type AbilityId = "dash";
 
 export type AbilityTargeting = "self" | "direction" | "point" | "unit";
 

@@ -161,7 +161,8 @@ button:disabled {
 
 .mode-grid,
 .arena-options,
-.lobby-grid {
+.lobby-grid,
+.build-summary {
   display: grid;
   gap: 10px;
   margin-bottom: 20px;
@@ -197,6 +198,17 @@ button:disabled {
   padding: 10px;
 }
 
+.build-summary {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.build-summary span {
+  border: 1px solid var(--game-ui-border);
+  background: var(--game-ui-panel);
+  color: var(--game-ui-text-muted);
+  padding: 10px;
+}
+
 .game-screen {
   position: relative;
 }
@@ -228,7 +240,8 @@ button:disabled {
 
   .hub-grid,
   .mode-grid,
-  .arena-options {
+  .arena-options,
+  .build-summary {
     grid-template-columns: 1fr;
   }
 }

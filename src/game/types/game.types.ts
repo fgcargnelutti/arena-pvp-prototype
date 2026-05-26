@@ -19,6 +19,10 @@ export type BuffDefinition = {
   effects: BuffEffect[];
 };
 
+export type CharacterId = "blade-adept";
+
+export type AbilityId = "basic-attack" | "dash";
+
 export type AbilitySlotId = "basic-attack" | "active-ability";
 
 export type AbilitySlotKind = "basic-attack" | "active";
@@ -29,6 +33,19 @@ export type AbilitySlotDefinition = {
   kind: AbilitySlotKind;
   inputLabel: string;
   isRequired: boolean;
+};
+
+export type BuildAbilityAssignment = {
+  slotId: AbilitySlotId;
+  abilityId: AbilityId;
+};
+
+export type PlayerBuildConfig = {
+  id: string;
+  name: string;
+  characterId: CharacterId;
+  characterName: string;
+  abilityAssignments: BuildAbilityAssignment[];
 };
 
 export type ActiveBuff = {
