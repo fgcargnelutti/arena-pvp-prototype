@@ -21,7 +21,7 @@ export type BuffDefinition = {
 
 export type CharacterId = "blade-adept";
 
-export type AbilityId = "basic-attack" | "dash";
+export type AbilityId = "basic-attack" | "dash" | "quick-step";
 
 export type AbilitySlotId = "basic-attack" | "active-ability";
 

@@ -10,6 +10,8 @@ import PvpLobbyScreen from "./app/screens/PvpLobbyScreen";
 import ResultsScreen from "./app/screens/ResultsScreen";
 import SplashScreen from "./app/screens/SplashScreen";
 import { matchPhaseLabels, type MatchPhase } from "./app/matchFlow";
+import { DEFAULT_PLAYER_BUILD_CONFIG } from "./game/data/buildConfigs";
+import type { PlayerBuildConfig } from "./game/types/game.types";
 
 type AppScreen =
   | "splash"
@@ -26,11 +28,13 @@ type AppScreen =
 type MatchContext = {
   modeLabel: string;
   arenaLabel: string;
+  buildConfig: PlayerBuildConfig;
 };
 
 const defaultMatchContext: MatchContext = {
   modeLabel: "PvP Skirmish",
   arenaLabel: "Mid Duel Arena",
+  buildConfig: DEFAULT_PLAYER_BUILD_CONFIG,
 };
 
 function App() {
@@ -85,8 +89,8 @@ function App() {
     return (
       <PvpLobbyScreen
         onBack={() => setScreen("match-mode-select")}
-        onStart={(selectedArena) => {
-          setMatchContext({ modeLabel: "PvP Skirmish", arenaLabel: selectedArena });
+        onStart={(selectedArena, buildConfig) => {
+          setMatchContext({ modeLabel: "PvP Skirmish", arenaLabel: selectedArena, buildConfig });
           setMatchPhase("in-game");
           setScreen("game");
         }}
@@ -99,7 +103,11 @@ function App() {
       <BossBattleLobbyScreen
         onBack={() => setScreen("match-mode-select")}
         onStart={() => {
-          setMatchContext({ modeLabel: "Boss Battle", arenaLabel: "Ancient Lion Lair" });
+          setMatchContext({
+            modeLabel: "Boss Battle",
+            arenaLabel: "Ancient Lion Lair",
+            buildConfig: DEFAULT_PLAYER_BUILD_CONFIG,
+          });
           setMatchPhase("in-game");
           setScreen("game");
         }}
@@ -112,6 +120,7 @@ function App() {
       <GameScreen
         modeLabel={matchContext.modeLabel}
         arenaLabel={matchContext.arenaLabel}
+        buildConfig={matchContext.buildConfig}
         matchPhaseLabel={matchPhaseLabels[matchPhase]}
         onFinish={() => {
           setMatchPhase("end");

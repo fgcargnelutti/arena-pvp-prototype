@@ -161,6 +161,7 @@ button:disabled {
 
 .mode-grid,
 .arena-options,
+.ability-options,
 .lobby-grid,
 .build-summary {
   display: grid;
@@ -187,9 +188,25 @@ button:disabled {
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
-.arena-options .selected {
+.arena-options .selected,
+.ability-options .selected {
   border-color: var(--game-accent);
   background: var(--game-accent);
+}
+
+.ability-options {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.ability-options button {
+  display: grid;
+  gap: 6px;
+  text-align: left;
+}
+
+.ability-options span {
+  color: var(--game-ui-text-inverted);
+  font-weight: 400;
 }
 
 .lobby-grid span {
@@ -241,6 +258,7 @@ button:disabled {
   .hub-grid,
   .mode-grid,
   .arena-options,
+  .ability-options,
   .build-summary {
     grid-template-columns: 1fr;
   }

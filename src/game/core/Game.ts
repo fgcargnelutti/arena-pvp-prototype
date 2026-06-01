@@ -1,7 +1,9 @@
 import { DashAbility } from "../combat/Ability";
 import { BasicAttack } from "../combat/BasicAttack";
 import { Health } from "../combat/Health";
+import { MOVEMENT_ABILITY_TUNING } from "../data/abilities";
 import { CREEP_SPEED_BUFF, BUFF_DEFINITIONS } from "../data/buffs";
+import { DEFAULT_PLAYER_BUILD_CONFIG } from "../data/buildConfigs";
 import { DummyEnemy } from "../entities/DummyEnemy";
 import type { Enemy } from "../entities/Enemy";
 import { ArenaEventSystem } from "../systems/ArenaEventSystem";
@@ -9,7 +11,7 @@ import { BuffSystem } from "../systems/BuffSystem";
 import { EnemyAISystem } from "../systems/EnemyAISystem";
 import { EnemySpawnSystem } from "../systems/EnemySpawnSystem";
 import { MovementSystem } from "../systems/MovementSystem";
-import type { GameState, Vector2 } from "../types/game.types";
+import type { AbilityId, GameState, PlayerBuildConfig, Vector2 } from "../types/game.types";
 import { distance } from "../utils/math";
 import { Camera } from "./Camera";
 import { GameRenderer } from "./GameRenderer";
@@ -24,7 +26,7 @@ export class Game {
   private readonly playerHealth = new Health(100);
   private readonly input = new Input();
   private readonly basicAttack = new BasicAttack(90, 20, 0.6);
-  private readonly dashAbility = new DashAbility(180, 1.8);
+  private readonly dashAbility: DashAbility;
   private readonly arenaEventSystem = new ArenaEventSystem();
   private readonly buffSystem = new BuffSystem(BUFF_DEFINITIONS);
   private readonly cameraSystem = new Camera();
@@ -74,8 +76,13 @@ export class Game {
     },
   };
 
-  public constructor(container: HTMLElement) {
+  public constructor(container: HTMLElement, buildConfig: PlayerBuildConfig = DEFAULT_PLAYER_BUILD_CONFIG) {
     this.renderer = new GameRenderer(container);
+    const movementAbility = this.getMovementAbility(buildConfig);
+    this.dashAbility = new DashAbility(
+      movementAbility.distance,
+      movementAbility.cooldownSeconds,
+    );
   }
 
   public async init(): Promise<void> {
@@ -238,6 +245,24 @@ export class Game {
   private grantCreepKillReward(): void {
     this.buffSystem.addOrRefresh(this.state.player, CREEP_SPEED_BUFF.id);
     this.updatePlayerSpeedFromBuffs();
+  }
+
+  private getMovementAbility(buildConfig: PlayerBuildConfig) {
+    const activeAbilityId = buildConfig.abilityAssignments.find(
+      (assignment) => assignment.slotId === "active-ability",
+    )?.abilityId;
+
+    if (this.isMovementAbilityId(activeAbilityId)) {
+      return MOVEMENT_ABILITY_TUNING[activeAbilityId];
+    }
+
+    return MOVEMENT_ABILITY_TUNING.dash;
+  }
+
+  private isMovementAbilityId(
+    abilityId: AbilityId | undefined,
+  ): abilityId is keyof typeof MOVEMENT_ABILITY_TUNING {
+    return abilityId === "dash" || abilityId === "quick-step";
   }
 
   private updatePlayerSpeedFromBuffs(): void {

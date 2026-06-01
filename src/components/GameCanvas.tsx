@@ -1,7 +1,12 @@
 import { useEffect, useRef } from "react";
 import { Game } from "../game/core/Game";
+import type { PlayerBuildConfig } from "../game/types/game.types";
 
-function GameCanvas() {
+type GameCanvasProps = {
+  buildConfig: PlayerBuildConfig;
+};
+
+function GameCanvas({ buildConfig }: GameCanvasProps) {
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -11,7 +16,7 @@ function GameCanvas() {
       return;
     }
 
-    const game = new Game(container);
+    const game = new Game(container, buildConfig);
     let isMounted = true;
     let isInitialized = false;
 
@@ -30,7 +35,7 @@ function GameCanvas() {
         game.destroy();
       }
     };
-  }, []);
+  }, [buildConfig]);
 
   return (
     <div

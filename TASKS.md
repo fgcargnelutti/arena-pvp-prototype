@@ -218,7 +218,7 @@ Goal: Introduce customization.
 
 - [x] Define ability slots
 - [x] Create build configuration
-- [ ] Allow swapping abilities
+- [x] Allow swapping abilities
 
 ---
 
